@@ -39,31 +39,35 @@ public class ApiVariable extends BaseDocument {
         return name;
     }
 
-    public void setName(String name) {
+    public ApiVariable setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public ApiVariable setType(String type) {
         this.type = type;
+        return this;
     }
 
     public boolean isNullable() {
         return nullable;
     }
 
-    public void setNullable(boolean nullable) {
+    public ApiVariable setNullable(boolean nullable) {
         this.nullable = nullable;
+        return this;
     }
 
-    public void addChildren(ApiVariable variable) {
+    public ApiVariable addChildren(ApiVariable variable) {
         if(Objects.isNull(this.childrens)) {
             this.childrens = new ArrayList<>();
         }
         this.childrens.add(variable);
+        return this;
     }
 
     public List<ApiVariable> getChildrens() {

@@ -27,28 +27,31 @@ public class ApiRequest extends BaseDocument {
         return consume;
     }
 
-    public void setConsume(String consume) {
+    public ApiRequest setConsume(String consume) {
         this.consume = consume;
+        return this;
     }
 
     public List<ApiVariable> getVariables() {
         return variables;
     }
 
-    public void addVariable(ApiVariable apiVariable) {
+    public ApiRequest addVariable(ApiVariable apiVariable) {
         if (Objects.isNull(this.variables)) {
             this.variables = new ArrayList<>();
         }
 
         this.variables.add(apiVariable);
+        return this;
     }
 
     public String getMethod() {
         return method;
     }
 
-    public void setMethod(String method) {
+    public ApiRequest setMethod(String method) {
         this.method = method;
+        return this;
     }
 
 

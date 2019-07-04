@@ -28,19 +28,21 @@ public class ApiResponse extends BaseDocument {
         return variables;
     }
 
-    public void addVariable(ApiVariable apiVariable) {
+    public ApiResponse addVariable(ApiVariable apiVariable) {
         if (Objects.isNull(this.variables)) {
             this.variables = new ArrayList<>();
         }
 
         this.variables.add(apiVariable);
+        return this;
     }
 
     public String getProduce() {
         return produce;
     }
 
-    public void setProduce(String produce) {
+    public ApiResponse setProduce(String produce) {
         this.produce = produce;
+        return this;
     }
 }

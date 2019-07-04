@@ -39,40 +39,45 @@ public class ApiAction extends BaseDocument {
         return url;
     }
 
-    public void setUrl(String url) {
+    public ApiAction setUrl(String url) {
         this.url = url;
+        return this;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public ApiAction setDescription(String description) {
         this.description = description;
+        return this;
     }
 
     public ApiActionGroup getGroup() {
         return group;
     }
 
-    public void setGroup(ApiActionGroup group) {
+    public ApiAction setGroup(ApiActionGroup group) {
         this.group = group;
+        return this;
     }
 
     public ApiRequest getRequest() {
         return request;
     }
 
-    public void setRequest(ApiRequest request) {
+    public ApiAction setRequest(ApiRequest request) {
         this.request = request;
+        return this;
     }
 
     public ApiResponse getResponse() {
         return response;
     }
 
-    public void setResponse(ApiResponse response) {
+    public ApiAction setResponse(ApiResponse response) {
         this.response = response;
+        return this;
     }
 
 

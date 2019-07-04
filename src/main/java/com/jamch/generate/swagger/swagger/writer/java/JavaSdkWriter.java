@@ -10,7 +10,7 @@ import com.jamch.generate.swagger.swagger.writer.WriterConfiguration;
  * @author Jamch[lowhgg@gmail.com]
  * @since 2019/07/03
  */
-public class JavaSdkWriter extends JavaWriter {
+public class JavaSdkWriter extends JavaRequestAndResponseWriter {
 
     public JavaSdkWriter(WriterConfiguration configuration) {
         super(configuration);
