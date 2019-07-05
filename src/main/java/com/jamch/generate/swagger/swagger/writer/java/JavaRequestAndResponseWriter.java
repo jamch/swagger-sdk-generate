@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -80,8 +81,7 @@ public class JavaRequestAndResponseWriter implements Writer {
             requestClassBuilder = initVariables(requestClassBuilder, request.getVariables());
 
             // init structure
-            ParameterizedTypeName extendClass = ParameterizedTypeName.get(
-                    ClassName.bestGuess("BaseRequest"),
+            ParameterizedTypeName extendClass = ParameterizedTypeName.get(ClassName.bestGuess("BaseRequest"),
                     ClassName.bestGuess(responseClassName));
             requestClassBuilder = requestClassBuilder.superclass(extendClass);
 
@@ -151,18 +151,6 @@ public class JavaRequestAndResponseWriter implements Writer {
     protected TypeSpec.Builder initVariables(TypeSpec.Builder tBuilder, List<ApiVariable> variables) {
         for (ApiVariable variable : variables) {
             switch (variable.getType()) {
-            case "string":
-            case "integer":
-            case "float":
-            case "boolean":
-            case "long":
-            case "date":
-                // base type
-                MethodSpec generateGetter = generateGetter(variable);
-                MethodSpec generateSetter = generateSetter(variable);
-                FieldSpec generateField = generateField(variable);
-                tBuilder = tBuilder.addField(generateField).addMethod(generateSetter).addMethod(generateGetter);
-                break;
             case "object":
                 // object
 
@@ -170,25 +158,68 @@ public class JavaRequestAndResponseWriter implements Writer {
                 String property = StringUtils.uncapitalize(variable.getName());
                 String objectName = StringUtils.capitalize(variable.getName());
 
-                generateGetter = generateGetter(property, ClassName.bestGuess(objectName));
-                generateSetter = generateSetter(property, ClassName.bestGuess(objectName));
-                generateField = generateField(ClassName.bestGuess(objectName), property);
+                MethodSpec generateGetter = generateGetter(property, ClassName.bestGuess(objectName));
+                MethodSpec generateSetter = generateSetter(property, ClassName.bestGuess(objectName));
+                FieldSpec generateField = generateField(ClassName.bestGuess(objectName), property);
 
-                tBuilder = tBuilder.addType(initInnerObject(tBuilder, variable)).addField(generateField)
-                        .addMethod(generateSetter).addMethod(generateGetter);
+                tBuilder = tBuilder.addType(initInnerObject(variable)).addField(generateField).addMethod(generateSetter)
+                        .addMethod(generateGetter);
                 break;
             case "array":
                 // array
+
+                property = StringUtils.uncapitalize(variable.getName());
+                generateField = initArray(tBuilder, variable);
+                generateGetter = generateGetter(property, generateField.type);
+                generateSetter = generateSetter(property, generateField.type);
+                tBuilder = tBuilder.addField(generateField).addMethod(generateSetter).addMethod(generateGetter);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown type [" + variable.getType() + "]");
+                // base type
+                generateGetter = generateGetter(variable);
+                generateSetter = generateSetter(variable);
+                generateField = generateField(variable);
+                tBuilder = tBuilder.addField(generateField).addMethod(generateSetter).addMethod(generateGetter);
+                break;
             }
         }
 
         return tBuilder;
     }
 
-    protected TypeSpec initInnerObject(TypeSpec.Builder tBuilder, ApiVariable variable) {
+    protected FieldSpec initArray(TypeSpec.Builder tBuilder, ApiVariable variable) {
+        ApiVariable children = variable.getChildrens().stream().findFirst().orElseThrow(
+                () -> new IllegalArgumentException("Array [" + variable.getName() + "] has none childrens"));
+
+        // avoid inner list, but inner list has none property name
+        String property = StringUtils.defaultString(StringUtils.uncapitalize(variable.getName()), "DEFAULT_PROPERTY");
+        String objectName = StringUtils.capitalize(children.getName());
+        FieldSpec.Builder fBuilder;
+
+        // process inline objects
+        switch (children.getType()) {
+        case "object":
+            // init inner object field
+            tBuilder.addType(initInnerObject(children));
+            fBuilder = FieldSpec.builder(
+                    ParameterizedTypeName.get(ClassName.get("java.util", "List"), ClassName.bestGuess(objectName)),
+                    property, Modifier.PRIVATE);
+            break;
+        case "array":
+            fBuilder = FieldSpec.builder(
+                    ParameterizedTypeName.get(ClassName.get("java.util", "List"), initArray(tBuilder, children).type),
+                    property, Modifier.PRIVATE);
+            break;
+        default:
+            fBuilder = FieldSpec.builder(ParameterizedTypeName.get(List.class, toJavaType(children.getType())),
+                    property, Modifier.PRIVATE);
+            break;
+        }
+
+        return fBuilder.build();
+    }
+
+    protected TypeSpec initInnerObject(ApiVariable variable) {
         Builder objectClassBuilder = TypeSpec.classBuilder(StringUtils.capitalize(variable.getName()))
                 .addModifiers(Modifier.PUBLIC);
 
@@ -261,8 +292,7 @@ public class JavaRequestAndResponseWriter implements Writer {
     }
 
     protected MethodSpec generateSetter(String property, String type) {
-        return MethodSpec.methodBuilder("set" + StringUtils.capitalize(property)).addModifiers(Modifier.PUBLIC)
-                .addParameter(toJavaType(type), property).addStatement("this.$N = $N", property, property).build();
+        return generateSetter(property, toJavaType(type));
     }
 
     protected MethodSpec generateSetter(String property, Type type) {
@@ -281,8 +311,7 @@ public class JavaRequestAndResponseWriter implements Writer {
     }
 
     protected MethodSpec generateGetter(String property, String type) {
-        return MethodSpec.methodBuilder("get" + StringUtils.capitalize(property)).addModifiers(Modifier.PUBLIC)
-                .addStatement("return this.$N", property).returns(toJavaType(type)).build();
+        return generateGetter(property, toJavaType(type));
     }
 
     protected MethodSpec generateGetter(String property, Type type) {

@@ -35,10 +35,9 @@ public class JavaWriterTest {
                         .addChildren(new ApiVariable().setName("provinceName").setType("string"))));
 
         ApiResponse response = new ApiResponse();
-        response.addVariable(new ApiVariable().setName("apiResult").setType("object")
-                .addChildren(new ApiVariable().setName("classificationName").setType("string"))
-                .addChildren(new ApiVariable().setName("amountMoney").setType("float"))
-                .addChildren(new ApiVariable().setName("quoteTime").setType("date")));
+        response.addVariable(new ApiVariable().setName("ApiLists").setType("array")
+                .addChildren(new ApiVariable().setType("array").addChildren(new ApiVariable().setName("apiResult")
+                        .setType("object").addChildren(new ApiVariable().setName("name").setType("string")))));
 
         action.setRequest(request).setResponse(response);
 
